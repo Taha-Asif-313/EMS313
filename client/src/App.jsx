@@ -11,27 +11,62 @@ import EmployeeLayout from "./pages/employee/EmployeeLayout";
 import SupportPage from "./pages/employee/SupportPage";
 import EmployeePortalPage from "./pages/employee/EmployeePortalPage";
 import EmployeeTasksPage from "./pages/employee/EmployeeTasksPage";
+import AdminProtected from "./components/Protected/AdminProtected";
+import EmployeeProtected from "./components/Protected/EmployeeProtected";
+import AuthLayout from "./pages/auth/AuthLayout";
 
 const App = () => {
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/">
+          {/* Auth pages */}
+          <Route path="/" element={<AuthLayout/>}>
             <Route index element={<HomePage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/login" element={<LoginPage />} />
           </Route>
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="manage-employee" element={<ManageEmployeePage />} />
-            <Route path="add-employee" element={<AddEmployeePage />} />
+
+          {/* Admin protected pages */}
+          <Route
+            path="/admin"
+            element={<AdminProtected Component={AdminLayout} />}
+          >
+            <Route
+              index
+              element={<AdminProtected Component={DashboardPage} />}
+            />
+            <Route
+              path="manage-employee"
+              element={<AdminProtected Component={ManageEmployeePage} />}
+            />
+            <Route
+              path="add-employee"
+              element={<AdminProtected Component={AddEmployeePage} />}
+            />
           </Route>
-          <Route path="/employee" element={<EmployeeLayout />}>
-            <Route index element={<EmployeePortalPage />} />
-            <Route path="employee-tasks" element={<EmployeeTasksPage />} />
-            <Route path="support" element={<SupportPage />} />
+
+          {/* Employee protected pages */}
+          <Route
+            path="/employee"
+            element={<EmployeeProtected Component={EmployeeLayout} />}
+          >
+            <Route
+              index
+              element={<EmployeeProtected Component={EmployeePortalPage} />}
+            />
+            <Route
+              path="employee-tasks"
+              element={<EmployeeProtected Component={EmployeeTasksPage} />}
+            />
+            <Route
+              path="support"
+              element={<EmployeeProtected Component={SupportPage} />}
+            />
           </Route>
+
+          {/* 404 Page - Must be the last route */}
+          <Route path="*" element={<p>No found</p>} />
         </Routes>
       </Router>
     </>
