@@ -125,7 +125,7 @@ export const logout = async (req, res) => {
 // Get Dashboard Stats
 export const dashboardStats = async (req, res) => {
   try {
-    const adminId = req.user._id; // assuming adminAuthMiddleware attaches full payload as `req.user`
+    const adminId = req.user.id; // assuming adminAuthMiddleware attaches full payload as `req.user`
 
     // Get only employees that belong to the logged-in admin
     const employees = await Employee.find({ admin: adminId });
@@ -159,10 +159,11 @@ export const dashboardStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Dashboard Stats Error:", error.message);
-    res.status(500).json({ success: false, message: "Failed to load dashboard stats." });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to load dashboard stats." });
   }
 };
-
 
 // Assign Task
 export const AssignTask = async (req, res) => {
@@ -211,8 +212,9 @@ export const AssignTask = async (req, res) => {
 // All Employees
 export const AllEmployees = async (req, res) => {
   try {
-    const allEmployees = await Employee.find({});
-    return res.json(allEmployees);
+    const adminId = req.user.id;
+    const allEmployees = await Employee.find({ admin: adminId });
+    return res.json({ allEmployees, success: true });
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -225,6 +227,7 @@ export const AllEmployees = async (req, res) => {
 // Add New Employee
 export const addEmployee = async (req, res) => {
   try {
+    const adminId = req.user.id;
     const { fullname, phone_no, email, password, country, role, CNIC, salary } =
       req.body;
 
@@ -249,6 +252,7 @@ export const addEmployee = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const employee = new Employee({
+      admin: adminId,
       fullname,
       phone_no,
       email,
@@ -296,15 +300,27 @@ export const fireEmployee = async (req, res) => {
 // Edit Employee (currently not implemented)
 export const editEmployee = async (req, res) => {
   try {
-    // TODO: Add logic for editing employee
-    return res
-      .status(200)
-      .json({ success: true, message: "Edit endpoint under development" });
+    const { id } = req.params;
+
+    const updated = await Employee.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updated) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Employee updated successfully",
+      employee: updated,
+    });
   } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    console.error("Edit Employee Error:", error);
+    return res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 

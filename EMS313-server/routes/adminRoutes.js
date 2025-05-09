@@ -14,7 +14,8 @@ import {
   markSalaryAsPaid,  // New import for marking salary as paid
   checkPaymentStatus,
   totalPendingTasks,
-  dashboardStats,  // New import for checking payment status
+  dashboardStats,
+  editEmployee,  // New import for checking payment status
 } from "../controllers/adminControllers.js";
 import adminAuthMiddleware from "../middlewares/isAdmin.js";
 
@@ -35,9 +36,8 @@ router.post("/reject-task/:id", adminAuthMiddleware(), rejectTask); // Requires 
 router.post("/accept-task/:id", adminAuthMiddleware(), acceptTask); // Requires admin authentication
 router.get("/total-salaries", adminAuthMiddleware(), totalSalaries); // Requires admin authentication
 router.get("/total-pending-tasks", adminAuthMiddleware(), totalPendingTasks); // Requires admin authentication
-
-// Add authentication middleware to protect this route
-router.get("/dashboard-stats", adminAuthMiddleware(), dashboardStats); // Fixed to use adminAuthMiddleware() correctly
+router.put("/edit-employee/:id", adminAuthMiddleware(), editEmployee); // Edit Employee Details
+router.get("/dashboard-stats", adminAuthMiddleware(), dashboardStats); // Get Dashboard Stats
 
 // Salary management routes
 router.put("/mark-salary-paid/:id", adminAuthMiddleware(), markSalaryAsPaid); // Requires admin authentication

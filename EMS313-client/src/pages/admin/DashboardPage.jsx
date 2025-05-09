@@ -5,7 +5,7 @@ import {
   WalletIcon,
   ClockIcon,
 } from "lucide-react";
-import StatCard from "../../components/admin/StatCard"; // import the reusable component
+import StatCard from "../../components/admin/StatCard";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import Loading from "../../components/Loading";
@@ -57,7 +57,7 @@ const DashboardPage = () => {
         const data = response.data;
 
         console.log("Dashboard API response:", data);
-
+        localStorage.setItem("allEmployees",JSON.stringify(data.employees));
         setDashboardStats({
           totalSalaries: data.totalSalaries,
           totalPendingTasks: data.totalPendingTasks,
@@ -95,7 +95,6 @@ const DashboardPage = () => {
         <button className="bg-primary text-white py-2 px-6 rounded-full">
           Logout
         </button>
-   
       </div>
 
       {/* Stats Cards */}
@@ -187,14 +186,24 @@ const DashboardPage = () => {
                 <th className="py-3 px-6 text-left font-semibold">Name</th>
                 <th className="py-3 px-6 text-left font-semibold">Role</th>
                 <th className="py-3 px-6 text-left font-semibold">Salary</th>
+                <th className="py-3 px-6 text-left font-semibold">Salary</th>
+                <th className="py-3 px-6 text-left font-semibold">Status</th>
               </tr>
             </thead>
             <tbody>
               {dashboardStats.employees.map((emp) => (
                 <tr key={emp._id} className="hover:bg-gray-100 transition">
-                  <td className="py-4 px-6 border-b font-medium">{emp.name}</td>
+                  <td className="py-4 px-6 border-b font-medium">
+                    {emp.fullname}
+                  </td>
                   <td className="py-4 px-6 border-b">{emp.role}</td>
                   <td className="py-4 px-6 border-b">${emp.salary}</td>
+                  <td className="py-4 px-6 border-b">
+                    {emp.paymentStatus ? "Paid" : "Unpaid"}
+                  </td>
+                  <td className="py-4 px-6 border-b">
+                    {emp.isActive ? "Active" : "InActive"}
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   PencilIcon,
   TrashIcon,
@@ -9,23 +9,47 @@ import EditEmployeeModal from "../../components/admin/EditEmployeeModal";
 import DeleteEmployeeModal from "../../components/admin/DeleteEmployeeModal";
 import AssignTaskModal from "../../components/admin/AssignTaskModal";
 import AddEmployeeModal from "../../components/admin/AddEmployeeModal";
+import { useDispatch, useSelector } from "react-redux";
+import { setEmployees } from "../../redux/adminSlice";
+import axios from "axios";
 
 const ManageEmployeesPage = () => {
+  const dispatch = useDispatch();
+  const authToken = useSelector((state) => state.admin.adminInstance.authToken);
+  const employees = useSelector((state) => state.admin.allEmployees) || [];
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeModal, setActiveModal] = useState(null); // 'edit' | 'delete' | 'assign' | 'add'
+  const [activeModal, setActiveModal] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-  const employees = [
-    { id: 1, name: "John Doe", role: "Manager", salary: "$5,000" },
-    { id: 2, name: "Jane Smith", role: "Developer", salary: "$4,500" },
-    { id: 3, name: "Sara Wilson", role: "Designer", salary: "$4,000" },
-    { id: 4, name: "Michael Brown", role: "QA Engineer", salary: "$4,200" },
-    { id: 5, name: "Emily Davis", role: "HR", salary: "$3,800" },
-  ];
-
   const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(searchQuery.toLowerCase())
+    emp.fullname.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      if (employees.length === 0) {
+        try {
+          const res = await axios.get(
+            `${import.meta.env.VITE_SERVER_URL}/api/admin/all-employees`,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          );
+          console.log(res);
+
+          if (res.data.success) {
+            dispatch(setEmployees(res.data.allEmployees)); // Assuming response has a `success` flag and `employees` array
+          }
+        } catch (error) {
+          console.error("Failed to fetch employees:", error);
+        }
+      }
+    };
+
+    fetchEmployees();
+  }, [employees, dispatch]);
 
   const openModal = (modalType, employee = null) => {
     setSelectedEmployee(employee);
@@ -74,49 +98,55 @@ const ManageEmployeesPage = () => {
                 <th className="py-3 px-6 text-left font-semibold">Name</th>
                 <th className="py-3 px-6 text-left font-semibold">Role</th>
                 <th className="py-3 px-6 text-left font-semibold">Salary</th>
+                <th className="py-3 px-6 text-left font-semibold">Payment</th>
+                <th className="py-3 px-6 text-left font-semibold">Status</th>
                 <th className="py-3 px-6 text-left font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredEmployees.length > 0 ? (
-                filteredEmployees.map((employee) => (
-                  <tr
-                    key={employee.id}
-                    className="hover:bg-gray-100 transition"
-                  >
+                filteredEmployees.map((emp) => (
+                  <tr key={emp._id} className="hover:bg-gray-100 transition">
                     <td className="py-4 px-6 border-b font-medium">
-                      {employee.name}
+                      {emp.fullname}
                     </td>
-                    <td className="py-4 px-6 border-b">{employee.role}</td>
-                    <td className="py-4 px-6 border-b">{employee.salary}</td>
+                    <td className="py-4 px-6 border-b">{emp.role}</td>
+                    <td className="py-4 px-6 border-b">${emp.salary}</td>
                     <td className="py-4 px-6 border-b">
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => openModal("edit", employee)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full"
-                        >
-                          <PencilIcon size={12} />
-                        </button>
-                        <button
-                          onClick={() => openModal("delete", employee)}
-                          className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full"
-                        >
-                          <TrashIcon size={12} />
-                        </button>
-                        <button
-                          onClick={() => openModal("assign", employee)}
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white p-2 rounded-full"
-                        >
-                          <ClipboardListIcon size={12} />
-                        </button>
-                      </div>
+                      {emp.paymentStatus ? "Paid" : "Unpaid"}
+                    </td>
+                    <td className="py-4 px-6 border-b">
+                      {emp.isActive ? "Active" : "InActive"}
+                    </td>
+                    <td className="py-4 px-6 border-b flex items-center gap-3">
+                      <button
+                        className="text-blue-500 hover:text-blue-700"
+                        onClick={() => openModal("edit", emp)}
+                        title="Edit"
+                      >
+                        <PencilIcon size={18} />
+                      </button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => openModal("delete", emp)}
+                        title="Delete"
+                      >
+                        <TrashIcon size={18} />
+                      </button>
+                      <button
+                        className="text-green-600 hover:text-green-800"
+                        onClick={() => openModal("assign", emp)}
+                        title="Assign Task"
+                      >
+                        <ClipboardListIcon size={18} />
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="6"
                     className="text-center py-8 text-gray-500 font-medium"
                   >
                     No employees found.
