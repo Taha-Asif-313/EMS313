@@ -16,7 +16,7 @@ const CustomInput = ({ name, value, onChange, placeholder, type = "text", icon: 
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className="w-full pr-10 pl-4 py-2 rounded-md transition duration-300 ease-in-out outline-none"
+          className="w-full pr-10 pl-4 py-2 rounded-md transition duration-300 !text-black ease-in-out outline-none"
           style={{
             border: "1px solid var(--primary)",
             backgroundColor: "transparent",

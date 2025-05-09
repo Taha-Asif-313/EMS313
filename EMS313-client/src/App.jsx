@@ -18,6 +18,7 @@ import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
 import ManageEmployeesPage from "./pages/admin/ManageEmployeesPage";
 import ManageTasksPage from "./pages/admin/ManageTasksPage";
 import AdminProfilePage from "./pages/admin/AdminProfilePage";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   return (
@@ -86,6 +87,31 @@ const App = () => {
           <Route path="*" element={<p>No found</p>} />
         </Routes>
       </Router>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#1f2937", // Tailwind gray-800
+            color: "#fff",
+            borderRadius: "12px",
+            padding: "16px",
+            fontSize: "14px",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10b981", // Tailwind green-500
+              secondary: "#d1fae5", // green-100
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#ef4444", // red-500
+              secondary: "#fee2e2", // red-100
+            },
+          },
+        }}
+      />
     </>
   );
 };
