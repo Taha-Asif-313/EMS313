@@ -11,6 +11,7 @@ import AcceptTaskModal from "../../components/admin/AcceptTaskModal";
 import RejectTaskModal from "../../components/admin/RejectTaskModal";
 import { useSelector } from "react-redux";
 import Loading from "../../components/Loading";
+import axios from "axios";
 
 const ManageTasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +32,8 @@ const ManageTasksPage = () => {
           withCredentials: true, // Add this to send cookies with the request
         }
       );
+      console.log(res);
+      
       setTasks(res.data);
     } catch (err) {
       console.error("Failed to fetch tasks", err);

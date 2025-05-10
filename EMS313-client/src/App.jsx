@@ -7,7 +7,6 @@ import DashboardPage from "./pages/admin/DashboardPage";
 import AdminLayout from "./pages/admin/AdminLayout";
 import EmployeeLayout from "./pages/employee/EmployeeLayout";
 import SupportPage from "./pages/employee/SupportPage";
-import EmployeePortalPage from "./pages/employee/EmployeePortalPage";
 import EmployeeTasksPage from "./pages/employee/EmployeeTasksPage";
 import AdminProtected from "./components/Protected/AdminProtected";
 import EmployeeProtected from "./components/Protected/EmployeeProtected";
@@ -74,7 +73,7 @@ const App = () => {
               element={<EmployeeProtected Component={EmployeeTasksPage} />}
             />
             <Route
-              path="employee-submit-task"
+              path="submit-task/:taskId"
               element={<EmployeeProtected Component={EmployeeSubmitTask} />}
             />
             <Route

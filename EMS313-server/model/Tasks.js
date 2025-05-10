@@ -29,6 +29,10 @@ const taskSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    submittedMessage: {
+      type: String,
+      default: null,
+    },
     isLate: {
       type: Boolean,
       default: false,

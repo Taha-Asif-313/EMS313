@@ -188,23 +188,25 @@ export const updateProfile = async (req, res) => {
 export const CompleteTask = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const { url } = req.body;
+    const { url, text } = req.body;
 
     const task = await Tasks.findById(taskId);
     if (!task)
-      return res
-        .status(404)
-        .json({ success: false, message: "Task not found" });
+      return res.status(404).json({ success: false, message: "Task not found" });
 
     const employee = await Employee.findById(task.EmployeeId);
     if (!employee)
-      return res
-        .status(404)
-        .json({ success: false, message: "Employee not found" });
+      return res.status(404).json({ success: false, message: "Employee not found" });
 
     task.status = "completed";
-    task.submittedUrl = url;
+    task.submittedUrl = url || null;
+    task.submittedMessage = text || null;
     task.isLate = new Date() > task.dueDate;
+
+    // (Optional) handle uploaded file
+    if (req.file) {
+      task.uploadedFilePath = req.file.path; // Add `uploadedFilePath` to your schema if needed
+    }
 
     await task.save();
 
@@ -215,20 +217,14 @@ export const CompleteTask = async (req, res) => {
     res.json({ success: true, message: "Task completed!", task });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Internal Server Error",
-        error: error.message,
-      });
+    res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
   }
 };
 
 // All Tasks
 export const allTasks = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).populate("Tasks");
+    const employee = await Employee.findById(req.employee.id).populate("tasks");
     res.json({ success: true, tasks: employee.tasks.reverse() });
   } catch (error) {
     res
@@ -281,36 +277,7 @@ export const markSalaryPaid = async (req, res) => {
   }
 };
 
-// Update Task Status
-export const updateTaskStatus = async (req, res) => {
-  const { taskId } = req.params;
-  const { status } = req.body;
 
-  if (!status) {
-    return res.status(400).json({ message: "Status is required." });
-  }
-
-  try {
-    const task = await Tasks.findById(taskId);
-    if (!task) return res.status(404).json({ message: "Task not found." });
-
-    if (task.assignedTo.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: "Unauthorized to update this task." });
-    }
-
-    task.status = status;
-    await task.save();
-
-    res
-      .status(200)
-      .json({ message: "Task status updated successfully.", task });
-  } catch (error) {
-    console.error("Update task status error:", error);
-    res.status(500).json({ message: "Server error." });
-  }
-};
 
 // Get Employee Profile
 export const getEmployeeProfile = async (req, res) => {

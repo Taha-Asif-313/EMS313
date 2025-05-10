@@ -26,7 +26,7 @@ router.get("/logout", logout);
 router.get("/employee-dashboard", employeeAuthMiddleware ,getEmployeeDashboardData);
 
 // ✅ Task Routes
-router.get("/all-tasks/:id", employeeAuthMiddleware, allTasks);
+router.get("/all-tasks", employeeAuthMiddleware, allTasks);
 router.post("/complete-task/:taskId", employeeAuthMiddleware, CompleteTask);
 router.get("/completed-tasks/:id", employeeAuthMiddleware, completedTasks);
 router.patch("/task-status/:taskId", employeeAuthMiddleware, updateTaskStatus);

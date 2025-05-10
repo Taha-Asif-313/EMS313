@@ -339,6 +339,37 @@ export const pendingTasks = async (req, res) => {
   }
 };
 
+// Update Task Status
+export const updateTaskStatus = async (req, res) => {
+  const { taskId } = req.params;
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ message: "Status is required." });
+  }
+
+  try {
+    const task = await Tasks.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found." });
+
+    if (task.assignedTo.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this task." });
+    }
+
+    task.status = status;
+    await task.save();
+
+    res
+      .status(200)
+      .json({ message: "Task status updated successfully.", task });
+  } catch (error) {
+    console.error("Update task status error:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
 // Get all submitted tasks (status === 'submitted')
 export const getSubmittedTasks = async (req, res) => {
   try {
@@ -349,7 +380,6 @@ export const getSubmittedTasks = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
-
 
 // Reject Task
 export const rejectTask = async (req, res) => {
