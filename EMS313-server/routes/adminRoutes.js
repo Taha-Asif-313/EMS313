@@ -15,7 +15,8 @@ import {
   checkPaymentStatus,
   totalPendingTasks,
   dashboardStats,
-  editEmployee,  // New import for checking payment status
+  editEmployee,
+  getSubmittedTasks,  // New import for checking payment status
 } from "../controllers/adminControllers.js";
 import adminAuthMiddleware from "../middlewares/isAdmin.js";
 
@@ -32,6 +33,7 @@ router.post("/assign-task/:id", adminAuthMiddleware(), AssignTask); // Requires 
 router.get("/all-employees", adminAuthMiddleware(), AllEmployees); // Requires admin authentication
 router.get("/all-pending-tasks/:id", adminAuthMiddleware(), pendingTasks); // Requires admin authentication
 router.delete("/fire-employee/:id", adminAuthMiddleware(), fireEmployee); // Requires admin authentication
+router.get("/tasks/submitted", adminAuthMiddleware(), getSubmittedTasks);
 router.post("/reject-task/:id", adminAuthMiddleware(), rejectTask); // Requires admin authentication
 router.post("/accept-task/:id", adminAuthMiddleware(), acceptTask); // Requires admin authentication
 router.get("/total-salaries", adminAuthMiddleware(), totalSalaries); // Requires admin authentication

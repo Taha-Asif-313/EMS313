@@ -50,13 +50,13 @@ const employeeSchema = new mongoose.Schema(
     tasks: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Task",
+        ref: "Tasks",
       },
     ],
     completedTasks: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Task",
+        ref: "Tasks",
       },
     ],
     admin: {

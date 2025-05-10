@@ -10,6 +10,7 @@ import {
   updatePassword,
   updateTaskStatus,
   completedTasks,
+  getEmployeeDashboardData,
 } from "../controllers/employeeControllers.js";
 
 import employeeAuthMiddleware from "../middlewares/isEmployee.js";
@@ -20,6 +21,9 @@ const router = Router();
 router.post("/signup", signup);
 router.post("/login", login);
 router.get("/logout", logout);
+
+// Get Dashboard Stats
+router.get("/employee-dashboard", employeeAuthMiddleware ,getEmployeeDashboardData);
 
 // ✅ Task Routes
 router.get("/all-tasks/:id", employeeAuthMiddleware, allTasks);

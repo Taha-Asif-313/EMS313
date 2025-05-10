@@ -28,6 +28,7 @@ export const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+
     const employee = new Employee({
       fullname,
       phone_no,
@@ -39,11 +40,13 @@ export const signup = async (req, res) => {
       salary,
       lastPaidDate: null,
     });
+
     await employee.save();
 
-    return res
-      .status(201)
-      .json({ success: true, message: "Registered Successfully!" });
+    return res.status(201).json({
+      success: true,
+      message: "Registered Successfully!",
+    });
   } catch (error) {
     console.error("Signup error:", error);
     return res
@@ -56,12 +59,16 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await Employee.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.json({ success: false, message: "Invalid credentials!" });
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid credentials!" });
     }
 
     const token = employeeGenerateToken(user._id, res);
+
     return res.status(200).json({
       success: true,
       message: "Login Successful!",
@@ -72,10 +79,10 @@ export const login = async (req, res) => {
       salary: user.salary,
       country: user.country,
       role: user.role,
-      authToken: token
+      authToken: token,
     });
   } catch (error) {
-    console.log("Login error:", error);
+    console.error("Login error:", error);
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
@@ -88,11 +95,52 @@ export const logout = (req, res) => {
     employeeTokenRemover(res);
     return res.json({ success: true, message: "Logout success" });
   } catch (error) {
-    return res.json({
-      success: false,
-      message: "Logout failed",
-      error: error.message,
+    return res
+      .status(500)
+      .json({ success: false, message: "Logout failed", error: error.message });
+  }
+};
+
+// Employee Dashboard
+export const getEmployeeDashboardData = async (req, res) => {
+  try {
+    const employeeId = req.employee.id;
+
+    const employee = await Employee.findById(employeeId)
+      .populate("tasks")
+      .populate("completedTasks");
+
+    if (!employee) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
+    }
+
+    const totalTasks = employee.tasks.length + employee.completedTasks.length;
+    const completedTasks = employee.completedTasks.length;
+    const pendingTasks = employee.tasks.length;
+    const latestTasks = employee.tasks.slice(-3).reverse();
+
+    const taskRate = 500;
+    const paid = !!employee.lastPaidDate;
+    const pendingSalary = paid ? 0 : completedTasks * taskRate;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalTasks,
+        completedTasks,
+        pendingTasks,
+        pendingSalary,
+        latestTasks,
+        fullname: employee.fullname,
+      },
     });
+  } catch (error) {
+    console.error("Dashboard Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
@@ -101,11 +149,14 @@ export const getProfile = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id)
       .select("-password")
-      .populate("tasks");
-    if (!employee)
+      .populate("Tasks");
+
+    if (!employee) {
       return res
         .status(404)
         .json({ success: false, message: "Employee not found" });
+    }
+
     res.json({ success: true, employee });
   } catch (error) {
     res
@@ -139,36 +190,28 @@ export const CompleteTask = async (req, res) => {
     const { taskId } = req.params;
     const { url } = req.body;
 
-    // Find the task by its ID
     const task = await Tasks.findById(taskId);
     if (!task)
       return res
         .status(404)
         .json({ success: false, message: "Task not found" });
 
-    // Find the employee associated with this task
     const employee = await Employee.findById(task.EmployeeId);
     if (!employee)
       return res
         .status(404)
         .json({ success: false, message: "Employee not found" });
 
-    // Mark the task as completed
     task.status = "completed";
-    task.submittedUrl = url; // Store the submission URL
-    task.isLate = new Date() > task.dueDate ? true : false; // Check if the task was completed late
+    task.submittedUrl = url;
+    task.isLate = new Date() > task.dueDate;
 
-    // Save the task updates
     await task.save();
 
-    // Move the task from 'tasks' to 'completedTasks' in the employee's record
     employee.completedTasks.push(task._id);
-    employee.tasks = employee.tasks.filter((id) => id.toString() !== taskId); // Remove from 'tasks'
-
-    // Save the employee updates
+    employee.tasks = employee.tasks.filter((id) => id.toString() !== taskId);
     await employee.save();
 
-    // Respond with success
     res.json({ success: true, message: "Task completed!", task });
   } catch (error) {
     console.error(error);
@@ -185,7 +228,7 @@ export const CompleteTask = async (req, res) => {
 // All Tasks
 export const allTasks = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.params.id).populate("tasks");
+    const employee = await Employee.findById(req.params.id).populate("Tasks");
     res.json({ success: true, tasks: employee.tasks.reverse() });
   } catch (error) {
     res
@@ -202,7 +245,7 @@ export const allTasks = async (req, res) => {
 export const completedTasks = async (req, res) => {
   try {
     const employee = await Employee.findById(req.params.id).populate(
-      "completedTasks.taskId"
+      "completedTasks"
     );
     res.json({ success: true, completedTasks: employee.completedTasks });
   } catch (error) {
@@ -238,67 +281,87 @@ export const markSalaryPaid = async (req, res) => {
   }
 };
 
-// PATCH /task-status/:taskId
+// Update Task Status
 export const updateTaskStatus = async (req, res) => {
   const { taskId } = req.params;
-  const { status } = req.body; // e.g., "Completed", "In Progress", "Pending Review"
+  const { status } = req.body;
 
   if (!status) {
     return res.status(400).json({ message: "Status is required." });
   }
 
   try {
-    const task = await Task.findById(taskId);
-    if (!task) {
-      return res.status(404).json({ message: "Task not found." });
-    }
+    const task = await Tasks.findById(taskId);
+    if (!task) return res.status(404).json({ message: "Task not found." });
 
-    // Optional: check if the logged-in employee is the task owner
     if (task.assignedTo.toString() !== req.user.id) {
-      return res.status(403).json({ message: "Unauthorized to update this task." });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this task." });
     }
 
     task.status = status;
     await task.save();
 
-    res.status(200).json({ message: "Task status updated successfully.", task });
+    res
+      .status(200)
+      .json({ message: "Task status updated successfully.", task });
   } catch (error) {
     console.error("Update task status error:", error);
     res.status(500).json({ message: "Server error." });
   }
 };
 
+// Get Employee Profile
 export const getEmployeeProfile = async (req, res) => {
   try {
     const { id } = req.params;
-
     const employee = await Employee.findById(id).select("-password");
+
     if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
     res.json({ success: true, employee });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
+// Update Employee Profile
 export const updateEmployeeProfile = async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    const employee = await Employee.findByIdAndUpdate(id, updates, { new: true, runValidators: true }).select("-password");
+    const employee = await Employee.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
     if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
-    res.json({ success: true, message: "Profile updated successfully", employee });
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      employee,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
 
+// Update Password
 export const updatePassword = async (req, res) => {
   try {
     const { id } = req.params;
@@ -306,12 +369,16 @@ export const updatePassword = async (req, res) => {
 
     const employee = await Employee.findById(id).select("+password");
     if (!employee) {
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, employee.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Old password is incorrect" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Old password is incorrect" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -320,7 +387,8 @@ export const updatePassword = async (req, res) => {
 
     res.json({ success: true, message: "Password updated successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: error.message });
   }
 };
-

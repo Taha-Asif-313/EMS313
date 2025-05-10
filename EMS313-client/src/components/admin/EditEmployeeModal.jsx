@@ -3,6 +3,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setEmployees } from "../../redux/adminSlice";
 import CustomDropdown from "./CustomDropDown";
+import toast from 'react-hot-toast'
 
 const EditEmployeeModal = ({ employee, onClose }) => {
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ const EditEmployeeModal = ({ employee, onClose }) => {
           `${import.meta.env.VITE_SERVER_URL}/api/admin/all-employees`,
           { headers: { Authorization: `Bearer ${authToken}` } }
         );
-        dispatch(setEmployees(allRes.data.allEmployees));
+        toast.success("Update Employee Successfully")
         onClose();
       }
     } catch (error) {

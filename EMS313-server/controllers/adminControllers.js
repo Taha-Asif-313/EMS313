@@ -339,6 +339,18 @@ export const pendingTasks = async (req, res) => {
   }
 };
 
+// Get all submitted tasks (status === 'submitted')
+export const getSubmittedTasks = async (req, res) => {
+  try {
+    const tasks = await Tasks.find({ status: "submitted" }).populate("EmployeeId", "fullname");
+    res.status(200).json(tasks);
+  } catch (error) {
+    console.error("Error fetching submitted tasks:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 // Reject Task
 export const rejectTask = async (req, res) => {
   try {

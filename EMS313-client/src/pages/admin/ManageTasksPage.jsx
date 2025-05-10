@@ -1,40 +1,47 @@
-import React, { useState } from "react";
-import { ClipboardCheckIcon, XCircleIcon, PaperclipIcon, UserPlusIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {
+  ClipboardCheckIcon,
+  XCircleIcon,
+  PaperclipIcon,
+  UserPlusIcon,
+} from "lucide-react";
 import CheckAttachmentModal from "../../components/admin/CheckAttachmentModal";
 import AttachEmployeeModal from "../../components/admin/AttachEmployeeModal";
 import AcceptTaskModal from "../../components/admin/AcceptTaskModal";
 import RejectTaskModal from "../../components/admin/RejectTaskModal";
-
-
+import { useSelector } from "react-redux";
+import Loading from "../../components/Loading";
 
 const ManageTasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null); // 'attachment' | 'attach' | 'accept' | 'reject'
   const [selectedTask, setSelectedTask] = useState(null);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const authToken = useSelector((state) => state.admin.adminInstance.authToken);
 
-  const tasks = [
-    {
-      id: 1,
-      title: "Design Homepage",
-      employeeName: "Sara Wilson",
-      status: "Submitted",
-      attachment: "homepage_design.pdf",
-    },
-    {
-      id: 2,
-      title: "Develop Login API",
-      employeeName: "Jane Smith",
-      status: "Submitted",
-      attachment: "login_api_docs.zip",
-    },
-    {
-      id: 3,
-      title: "Test Payment Gateway",
-      employeeName: "Michael Brown",
-      status: "Submitted",
-      attachment: "payment_tests.xlsx",
-    },
-  ];
+  const fetchTasks = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_SERVER_URL}/api/admin/tasks/submitted`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+          withCredentials: true, // Add this to send cookies with the request
+        }
+      );
+      setTasks(res.data);
+    } catch (err) {
+      console.error("Failed to fetch tasks", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const filteredTasks = tasks.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -49,6 +56,8 @@ const ManageTasksPage = () => {
     setSelectedTask(null);
     setActiveModal(null);
   };
+
+  if (loading) return <Loading />;
 
   return (
     <div className="flex-1 p-8 max-h-screen overflow-y-auto max-lg:pt-24 max-lg:px-5">
@@ -79,22 +88,25 @@ const ManageTasksPage = () => {
               <tr className="bg-green-100 text-green-700">
                 <th className="py-3 px-6 text-left font-semibold">Title</th>
                 <th className="py-3 px-6 text-left font-semibold">Employee</th>
-                <th className="py-3 px-6 text-left font-semibold">Attachment</th>
+                <th className="py-3 px-6 text-left font-semibold">
+                  Attachment
+                </th>
                 <th className="py-3 px-6 text-left font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => (
-                  <tr
-                    key={task.id}
-                    className="hover:bg-gray-100 transition"
-                  >
+                  <tr key={task._id} className="hover:bg-gray-100 transition">
                     <td className="py-4 px-6 border-b font-medium">
                       {task.title}
                     </td>
-                    <td className="py-4 px-6 border-b">{task.employeeName}</td>
-                    <td className="py-4 px-6 border-b">{task.attachment}</td>
+                    <td className="py-4 px-6 border-b">
+                      {task.EmployeeId?.fullname || "N/A"}
+                    </td>
+                    <td className="py-4 px-6 border-b">
+                      {task.submittedUrl || "No file"}
+                    </td>
                     <td className="py-4 px-6 border-b">
                       <div className="flex gap-3">
                         <button
@@ -131,7 +143,7 @@ const ManageTasksPage = () => {
                     colSpan="4"
                     className="text-center py-8 text-gray-500 font-medium"
                   >
-                    No tasks found.
+                    {loading ? "Loading tasks..." : "No tasks found."}
                   </td>
                 </tr>
               )}

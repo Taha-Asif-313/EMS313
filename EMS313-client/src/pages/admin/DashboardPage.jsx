@@ -57,7 +57,7 @@ const DashboardPage = () => {
         const data = response.data;
 
         console.log("Dashboard API response:", data);
-        localStorage.setItem("allEmployees",JSON.stringify(data.employees));
+        localStorage.setItem("allEmployees", JSON.stringify(data.employees));
         setDashboardStats({
           totalSalaries: data.totalSalaries,
           totalPendingTasks: data.totalPendingTasks,
@@ -191,21 +191,29 @@ const DashboardPage = () => {
               </tr>
             </thead>
             <tbody>
-              {dashboardStats.employees.map((emp) => (
-                <tr key={emp._id} className="hover:bg-gray-100 transition">
-                  <td className="py-4 px-6 border-b font-medium">
-                    {emp.fullname}
-                  </td>
-                  <td className="py-4 px-6 border-b">{emp.role}</td>
-                  <td className="py-4 px-6 border-b">${emp.salary}</td>
-                  <td className="py-4 px-6 border-b">
-                    {emp.paymentStatus ? "Paid" : "Unpaid"}
-                  </td>
-                  <td className="py-4 px-6 border-b">
-                    {emp.isActive ? "Active" : "InActive"}
+              {dashboardStats.employees.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-6 text-gray-500">
+                    No employees found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                dashboardStats.employees.map((emp) => (
+                  <tr key={emp._id} className="hover:bg-gray-100 transition">
+                    <td className="py-4 px-6 border-b font-medium">
+                      {emp.fullname}
+                    </td>
+                    <td className="py-4 px-6 border-b">{emp.role}</td>
+                    <td className="py-4 px-6 border-b">${emp.salary}</td>
+                    <td className="py-4 px-6 border-b">
+                      {emp.paymentStatus ? "Paid" : "Unpaid"}
+                    </td>
+                    <td className="py-4 px-6 border-b">
+                      {emp.isActive ? "Active" : "Inactive"}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
