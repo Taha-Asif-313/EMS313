@@ -8,16 +8,20 @@ const DeleteEmployeeModal = ({ employee, onClose }) => {
 
   const handleDelete = async () => {
     try {
-      const res = await axios.delete(`${import.meta.env.VITE_SERVER_URL}/api/admin/fire-employee/${employee._id}`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`, // or wherever your auth token is stored
-        },
-      });
-console.log(res);
+      const res = await axios.delete(
+        `${import.meta.env.VITE_SERVER_URL}/api/admin/fire-employee/${
+          employee._id
+        }`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`, // or wherever your auth token is stored
+          },
+        }
+      );
 
       if (res.data.success) {
         toast.success("Employee deleted successfully!");
-        onDeleted?.(); // refresh list or update state
+   
         onClose();
       } else {
         toast.error(res.data.message || "Failed to delete employee.");

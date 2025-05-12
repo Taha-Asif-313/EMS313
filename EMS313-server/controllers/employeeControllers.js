@@ -159,13 +159,11 @@ export const getProfile = async (req, res) => {
 
     res.json({ success: true, employee });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching profile",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profile",
+      error: error.message,
+    });
   }
 };
 
@@ -192,13 +190,17 @@ export const CompleteTask = async (req, res) => {
 
     const task = await Tasks.findById(taskId);
     if (!task)
-      return res.status(404).json({ success: false, message: "Task not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Task not found" });
 
     const employee = await Employee.findById(task.EmployeeId);
     if (!employee)
-      return res.status(404).json({ success: false, message: "Employee not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
 
-    task.status = "completed";
+    task.status = "assigned";
     task.submittedUrl = url || null;
     task.submittedMessage = text || null;
     task.isLate = new Date() > task.dueDate;
@@ -217,23 +219,74 @@ export const CompleteTask = async (req, res) => {
     res.json({ success: true, message: "Task completed!", task });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// Complete Task
+export const submitTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { url, text } = req.body;
+
+    const task = await Tasks.findById(taskId);
+    if (!task)
+      return res
+        .status(404)
+        .json({ success: false, message: "Task not found" });
+
+    const employee = await Employee.findById(task.EmployeeId);
+    if (!employee)
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
+    console.log(url, text);
+
+    task.status = "pending";
+    task.submittedUrl = url || null;
+    task.submittedMessage = text || null;
+    task.isLate = new Date() > task.dueDate;
+
+    // (Optional) handle uploaded file
+    if (req.file) {
+      task.uploadedFilePath = req.file.path; // Add `uploadedFilePath` to your schema if needed
+    }
+
+    await task.save();
+
+    employee.completedTasks.push(task._id);
+    employee.tasks = employee.tasks.filter((id) => id.toString() !== taskId);
+    await employee.save();
+
+    res.json({ success: true, message: "Task completed!", task });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 };
 
 // All Tasks
 export const allTasks = async (req, res) => {
   try {
-    const employee = await Employee.findById(req.employee.id).populate("tasks");
-    res.json({ success: true, tasks: employee.tasks.reverse() });
+    const emplyeeTasks = await Tasks.find({
+      EmployeeId: req.employee.id,
+      status: "assigned",
+    });
+    res.json({ success: true, tasks: emplyeeTasks.reverse() });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching tasks",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching tasks",
+      error: error.message,
+    });
   }
 };
 
@@ -245,13 +298,11 @@ export const completedTasks = async (req, res) => {
     );
     res.json({ success: true, completedTasks: employee.completedTasks });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Error fetching completed tasks",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Error fetching completed tasks",
+      error: error.message,
+    });
   }
 };
 
@@ -267,17 +318,13 @@ export const markSalaryPaid = async (req, res) => {
       lastPaidDate: employee.lastPaidDate,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to update salary status",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to update salary status",
+      error: error.message,
+    });
   }
 };
-
-
 
 // Get Employee Profile
 export const getEmployeeProfile = async (req, res) => {

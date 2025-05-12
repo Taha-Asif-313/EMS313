@@ -10,13 +10,11 @@ import DeleteEmployeeModal from "../../components/admin/DeleteEmployeeModal";
 import AssignTaskModal from "../../components/admin/AssignTaskModal";
 import AddEmployeeModal from "../../components/admin/AddEmployeeModal";
 import { useDispatch, useSelector } from "react-redux";
-import { setEmployees } from "../../redux/adminSlice";
 import axios from "axios";
 
 const ManageEmployeesPage = () => {
-  const dispatch = useDispatch();
   const authToken = useSelector((state) => state.admin.adminInstance.authToken);
-  const employees = useSelector((state) => state.admin.allEmployees) || [];
+  const [employees, setEmployees] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModal, setActiveModal] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -25,31 +23,31 @@ const ManageEmployeesPage = () => {
     emp.fullname.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      if (employees.length === 0) {
-        try {
-          const res = await axios.get(
-            `${import.meta.env.VITE_SERVER_URL}/api/admin/all-employees`,
-            {
-              headers: {
-                Authorization: `Bearer ${authToken}`,
-              },
-            }
-          );
-          console.log(res);
-
-          if (res.data.success) {
-            dispatch(setEmployees(res.data.allEmployees)); // Assuming response has a `success` flag and `employees` array
+  const fetchEmployees = async () => {
+    if (employees.length === 0) {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_SERVER_URL}/api/admin/all-employees`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
           }
-        } catch (error) {
-          console.error("Failed to fetch employees:", error);
-        }
-      }
-    };
+        );
+        console.log(res);
 
+        if (res.data.success) {
+          setEmployees(res.data.allEmployees); // Assuming response has a `success` flag and `employees` array
+        }
+      } catch (error) {
+        console.error("Failed to fetch employees:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
     fetchEmployees();
-  }, [employees, dispatch]);
+  }, [employees,selectedEmployee]);
 
   const openModal = (modalType, employee = null) => {
     setSelectedEmployee(employee);
@@ -59,6 +57,7 @@ const ManageEmployeesPage = () => {
   const closeModal = () => {
     setActiveModal(null);
     setSelectedEmployee(null);
+    window.location.reload()
   };
 
   return (
@@ -163,7 +162,7 @@ const ManageEmployeesPage = () => {
         <EditEmployeeModal employee={selectedEmployee} onClose={closeModal} />
       )}
       {activeModal === "delete" && (
-        <DeleteEmployeeModal employee={selectedEmployee} onClose={closeModal} />
+        <DeleteEmployeeModal employee={selectedEmployee} onClose={closeModal}/>
       )}
       {activeModal === "assign" && (
         <AssignTaskModal employee={selectedEmployee} onClose={closeModal} />

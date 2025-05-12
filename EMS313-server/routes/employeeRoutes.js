@@ -8,9 +8,9 @@ import {
   getEmployeeProfile,
   updateEmployeeProfile,
   updatePassword,
-  updateTaskStatus,
   completedTasks,
   getEmployeeDashboardData,
+  submitTask,
 } from "../controllers/employeeControllers.js";
 
 import employeeAuthMiddleware from "../middlewares/isEmployee.js";
@@ -27,9 +27,9 @@ router.get("/employee-dashboard", employeeAuthMiddleware ,getEmployeeDashboardDa
 
 // ✅ Task Routes
 router.get("/all-tasks", employeeAuthMiddleware, allTasks);
-router.post("/complete-task/:taskId", employeeAuthMiddleware, CompleteTask);
+router.post("/submit-task/:taskId", employeeAuthMiddleware, submitTask);
 router.get("/completed-tasks/:id", employeeAuthMiddleware, completedTasks);
-router.patch("/task-status/:taskId", employeeAuthMiddleware, updateTaskStatus);
+
 
 // 👤 Profile Routes
 router.get("/profile/:id", employeeAuthMiddleware, getEmployeeProfile);

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 
@@ -10,6 +10,7 @@ const EmployeeSubmitTask = () => {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const { taskId } = useParams();
+  const navigate = useNavigate();
   const authToken = useSelector(
     (state) => state.employee.employeeInstance.authToken
   );
@@ -19,25 +20,18 @@ const EmployeeSubmitTask = () => {
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("text", text);
-      formData.append("url", url);
-      if (file) formData.append("file", file);
-
       const res = await axios.post(
-        `${
-          import.meta.env.VITE_SERVER_URL
-        }/api/employee/complete-task/${taskId}`,
-        formData,
+        `${import.meta.env.VITE_SERVER_URL}/api/employee/submit-task/${taskId}`,
+        { text, url },
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${authToken}`,
           },
         }
       );
       console.log(res);
 
+      navigate("/employee");
       toast.success("Task submitted successfully!");
     } catch (err) {
       console.error(err);

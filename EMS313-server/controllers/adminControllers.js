@@ -209,6 +209,101 @@ export const AssignTask = async (req, res) => {
   }
 };
 
+// ReAssign Task
+export const reAssignTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { url, text } = req.body;
+
+    const task = await Tasks.findById(taskId);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    const employee = await Employee.findById(task.EmployeeId);
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Update task fields
+    task.status = "assigned";
+    task.submittedUrl = url || null;
+    task.submittedMessage = text || null;
+    task.isLate = new Date() > task.dueDate;
+
+    if (req.file) {
+      task.uploadedFilePath = req.file.path; // Make sure your schema has this field
+    }
+
+    await task.save();
+
+    // Ensure task is in employee.tasks and removed from completedTasks
+    if (!employee.tasks.includes(task._id)) {
+      employee.tasks.push(task._id);
+    }
+
+    employee.completedTasks = employee.completedTasks.filter(
+      (id) => id.toString() !== taskId
+    );
+
+    await employee.save();
+
+    return res.json({
+      success: true,
+      message: "Task reassigned successfully!",
+      task,
+    });
+  } catch (error) {
+    console.error("Reassign Task Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+// Accept Task
+export const acceptTask = async (req, res) => {
+  try {
+    const { id: taskId } = req.params;
+
+    const task = await Tasks.findById(taskId).populate("EmployeeId");
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    task.status = "completed";
+    await task.save();
+
+    const employee = await Employee.findById(task.EmployeeId._id);
+    if (employee) {
+      employee.completedTasks = employee.completedTasks.filter(
+        (id) => id.toString() !== taskId
+      );
+      await employee.save();
+    }
+
+    return res.json({ success: true, message: "Task Accepted!" });
+  } catch (error) {
+    console.error("Accept Task Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 // All Employees
 export const AllEmployees = async (req, res) => {
   try {
@@ -342,7 +437,7 @@ export const pendingTasks = async (req, res) => {
 // Update Task Status
 export const updateTaskStatus = async (req, res) => {
   const { taskId } = req.params;
-  const { status } = req.body;
+  const { status, note } = req.body;
 
   if (!status) {
     return res.status(400).json({ message: "Status is required." });
@@ -352,13 +447,14 @@ export const updateTaskStatus = async (req, res) => {
     const task = await Tasks.findById(taskId);
     if (!task) return res.status(404).json({ message: "Task not found." });
 
-    if (task.assignedTo.toString() !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: "Unauthorized to update this task." });
-    }
+    // if (task.EmployeeId.toString() !== req.user.id) {
+    //   return res
+    //     .status(403)
+    //     .json({ message: "Unauthorized to update this task." });
+    // }
 
     task.status = status;
+    task.submittedMessage = note;
     await task.save();
 
     res
@@ -373,7 +469,10 @@ export const updateTaskStatus = async (req, res) => {
 // Get all submitted tasks (status === 'submitted')
 export const getSubmittedTasks = async (req, res) => {
   try {
-    const tasks = await Tasks.find({ status: "submitted" }).populate("EmployeeId", "fullname");
+    const tasks = await Tasks.find({ status: "pending" }).populate(
+      "EmployeeId",
+      "fullname"
+    );
     res.status(200).json(tasks);
   } catch (error) {
     console.error("Error fetching submitted tasks:", error);
@@ -402,35 +501,6 @@ export const rejectTask = async (req, res) => {
       await employee.save();
 
       return res.json({ success: true, message: "Task Rejected!" });
-    }
-  } catch (error) {
-    console.log(error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
-  }
-};
-
-// Accept Task
-export const acceptTask = async (req, res) => {
-  try {
-    const { id: taskId } = req.params;
-    const task = await Tasks.findById(taskId).populate("EmployeeId");
-
-    if (!task)
-      return res
-        .status(404)
-        .json({ success: false, message: "Task not found" });
-
-    const employee = await Employee.findById(task.EmployeeId._id);
-
-    if (employee) {
-      employee.completedTasks = employee.completedTasks.filter(
-        (id) => id.toString() !== taskId
-      );
-      await employee.save();
-
-      return res.json({ success: true, message: "Task Accepted!" });
     }
   } catch (error) {
     console.log(error);

@@ -43,7 +43,10 @@ const EmployeeTasksPage = () => {
       ) : tasks.length > 0 ? (
         tasks.map((task) => <TaskCard key={task._id} task={task} />)
       ) : (
-        <p>No tasks assigned.</p>
+        <div className="h-screen w-full flex items-center justify-center">
+
+          <p >No tasks assigned.</p>
+        </div>
       )}
     </div>
   );

@@ -1,9 +1,10 @@
-import React from "react";
+import { Mail } from "lucide-react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import CheckMessageModal from "./CheckMessageModal";
 
 const TaskCard = ({ task }) => {
-  
-  
+  const [openMessage, setopenMessage] = useState(false);
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
@@ -43,13 +44,32 @@ const TaskCard = ({ task }) => {
           Priority: {task.priority}
         </span>
       </div>
+      <div className="flex items-center justify-between gap-2 mt-3">
+        <Link
+          to={`/employee/submit-task/${task._id}`}
+          className="flex-1 text-sm bg-primary py-2 text-center rounded-lg hover:bg-primary/90"
+        >
+          Submit Task
+        </Link>
 
-      <Link
-        to={`/employee/submit-task/${task._id}`}
-        className="mt-4 text-sm bg-primary py-2 text-center rounded-lg hover:bg-primary/90"
-      >
-        Submit Task
-      </Link>
+        <button
+          onClick={() => setopenMessage(true)}
+          className="relative text-white w-10 flex items-center justify-center h-10 bg-primary rounded-full"
+        >
+          <Mail size={24} />
+
+          {/* Alert Dot */}
+          <span className="absolute top-0 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+          <span className="absolute top-0 right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full" />
+        </button>
+      </div>
+      {openMessage && (
+        <CheckMessageModal
+          key={task._id}
+          task={task}
+          onClose={() => setopenMessage(false)}
+        />
+      )}
     </div>
   );
 };

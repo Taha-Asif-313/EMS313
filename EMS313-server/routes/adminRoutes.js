@@ -11,12 +11,14 @@ import {
   rejectTask,
   signup,
   totalSalaries,
-  markSalaryAsPaid,  // New import for marking salary as paid
+  markSalaryAsPaid, 
   checkPaymentStatus,
   totalPendingTasks,
   dashboardStats,
   editEmployee,
-  getSubmittedTasks,  // New import for checking payment status
+  getSubmittedTasks,
+  updateTaskStatus,
+  reAssignTask,  // New import for checking payment status
 } from "../controllers/adminControllers.js";
 import adminAuthMiddleware from "../middlewares/isAdmin.js";
 
@@ -30,6 +32,7 @@ router.post("/login", login);
 router.get("/logout", adminAuthMiddleware(), logout); // Requires admin authentication
 router.post("/add-employee", adminAuthMiddleware(), addEmployee); // Requires admin authentication
 router.post("/assign-task/:id", adminAuthMiddleware(), AssignTask); // Requires admin authentication
+router.post("/reassign-task/:taskId", adminAuthMiddleware(), reAssignTask); // Requires admin authentication
 router.get("/all-employees", adminAuthMiddleware(), AllEmployees); // Requires admin authentication
 router.get("/all-pending-tasks/:id", adminAuthMiddleware(), pendingTasks); // Requires admin authentication
 router.delete("/fire-employee/:id", adminAuthMiddleware(), fireEmployee); // Requires admin authentication
@@ -40,6 +43,7 @@ router.get("/total-salaries", adminAuthMiddleware(), totalSalaries); // Requires
 router.get("/total-pending-tasks", adminAuthMiddleware(), totalPendingTasks); // Requires admin authentication
 router.put("/edit-employee/:id", adminAuthMiddleware(), editEmployee); // Edit Employee Details
 router.get("/dashboard-stats", adminAuthMiddleware(), dashboardStats); // Get Dashboard Stats
+router.patch("/task-status/:taskId",adminAuthMiddleware(), updateTaskStatus);
 
 // Salary management routes
 router.put("/mark-salary-paid/:id", adminAuthMiddleware(), markSalaryAsPaid); // Requires admin authentication

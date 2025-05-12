@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  ClipboardCheckIcon,
-  XCircleIcon,
-  PaperclipIcon,
-  UserPlusIcon,
-} from "lucide-react";
+import { Mail, RotateCcw, X, Check } from "lucide-react";
 import CheckAttachmentModal from "../../components/admin/CheckAttachmentModal";
-import AttachEmployeeModal from "../../components/admin/AttachEmployeeModal";
 import AcceptTaskModal from "../../components/admin/AcceptTaskModal";
 import RejectTaskModal from "../../components/admin/RejectTaskModal";
 import { useSelector } from "react-redux";
 import Loading from "../../components/Loading";
 import axios from "axios";
+import ReAssignTaskModal from "../../components/admin/ReAssignTaskModal";
 
 const ManageTasksPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -32,8 +27,8 @@ const ManageTasksPage = () => {
           withCredentials: true, // Add this to send cookies with the request
         }
       );
-      console.log(res);
-      
+      console.log(res.data);
+
       setTasks(res.data);
     } catch (err) {
       console.error("Failed to fetch tasks", err);
@@ -108,34 +103,34 @@ const ManageTasksPage = () => {
                       {task.EmployeeId?.fullname || "N/A"}
                     </td>
                     <td className="py-4 px-6 border-b">
-                      {task.submittedUrl || "No file"}
+                      {task.submittedUrl || "No"}
                     </td>
                     <td className="py-4 px-6 border-b">
                       <div className="flex gap-3">
                         <button
                           onClick={() => openModal("attachment", task)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full"
+                          className="text-blue-600 rounded-full"
                         >
-                          <PaperclipIcon size={14} />
+                          <Mail size={20} />
                         </button>
                         <button
                           onClick={() => openModal("attach", task)}
-                          className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full"
+                          className="text-purple-600 rounded-full"
                         >
-                          <UserPlusIcon size={14} />
+                          <RotateCcw size={20} />
                         </button>
                         <button
                           onClick={() => openModal("accept", task)}
-                          className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full"
+                          className=" text-green-600 rounded-full"
                         >
-                          <ClipboardCheckIcon size={14} />
+                          <Check size={20} />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => openModal("reject", task)}
-                          className="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full"
+                          className="text-red-600 rounded-full"
                         >
-                          <XCircleIcon size={14} />
-                        </button>
+                          <X size={20} />
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -160,7 +155,7 @@ const ManageTasksPage = () => {
         <CheckAttachmentModal task={selectedTask} onClose={closeModal} />
       )}
       {activeModal === "attach" && (
-        <AttachEmployeeModal task={selectedTask} onClose={closeModal} />
+        <ReAssignTaskModal task={selectedTask} onClose={closeModal} />
       )}
       {activeModal === "accept" && (
         <AcceptTaskModal task={selectedTask} onClose={closeModal} />
